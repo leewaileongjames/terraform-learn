@@ -9,6 +9,7 @@ variable env_prefix {}
 variable my_ip {}
 variable instance_type {}
 variable docker_image {}
+variable private_key_location {}
 
 resource "aws_vpc" "myapp-vpc" {
     cidr_block = var.vpc_cidr_block
@@ -112,15 +113,7 @@ resource "aws_instance" "myapp-server" {
     associate_public_ip_address = true
     key_name = "myAWSKP" // OR aws_key_pair.ssh-key.key_name
 
-    user_data = <<EOF
-#!/bin/bash
-sudo yum update -y && sudo yum install -y docker
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -aG docker ec2-user
-newgrp docker
-docker run -p 5000:80 ${var.docker_image}
-EOF
+    user_data = file("entry-script.sh")
 
     tags = {
         Name = "${var.env_prefix}-server"
